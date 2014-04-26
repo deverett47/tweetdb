@@ -11,6 +11,7 @@ public class Main {
 		try {
 			DBConnection dbc = new DBConnection();
 			//dbc.insertTweet();
+			dbc.searchTweets("obAMa");
 			
 		} catch (ClassNotFoundException e) {
 			// TODO Auto-generated catch block
