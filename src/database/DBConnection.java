@@ -1,10 +1,17 @@
 package database;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.sql.Date;
+import java.util.Date;
 
+import tweets.Tweet;
 import twitter4j.Status;
 
 public class DBConnection {
@@ -13,14 +20,14 @@ public class DBConnection {
 	
 	public DBConnection() throws ClassNotFoundException, SQLException {
 		Class.forName("org.sqlite.JDBC");
-		_conn = DriverManager.getConnection("jdbc:sqlite:data/testtweets.db");
+		_conn = DriverManager.getConnection("jdbc:sqlite:data/tweets1.db");
 	}
 	
 	public void createTable() throws SQLException {
 		Statement statement = _conn.createStatement();
 		String schema = "CREATE TABLE TWEETS" +
 					 "(id INT PRIMARY KEY," +
-					 "message TEXT(140)," +
+					 "message TEXT," +
 					 "lat REAL," + 
 					 "lon REAL," +
 					 "date DATETIME," +
@@ -29,16 +36,27 @@ public class DBConnection {
 		statement.executeUpdate(schema);
 	}
 	
+	public void test() {
+		System.out.println("test");
+	}
+	
 	
 	public void insertTweet(Status s) throws SQLException {
-		PreparedStatement statement = _conn.prepareStatement("INSERT INTO TWEETS (?, ?, ?, ?, ?, ?);");
+		PreparedStatement statement = _conn.prepareStatement("INSERT INTO TWEETS (id, message, lat, lon, date, retweets) " +
+				"VALUES (?, ?, ?, ?, ?, ?);");
+
+		//String date = new SimpleDateFormat("yyyy-MM-dd").format(s.getCreatedAt());
+		//date += " ";
+		//date += new SimpleDateFormat("HH-MM-SS.SSS").format(s.getCreatedAt());
 		
 		statement.setString(1, Long.toString(s.getId()));
 		statement.setString(2, s.getText());
 		statement.setString(3, Double.toString(s.getGeoLocation().getLatitude()));
 		statement.setString(4, Double.toString(s.getGeoLocation().getLongitude()));
-		statement.setString(5, s.getCreatedAt().toString());
+		statement.setDate(5, new java.sql.Date(s.getCreatedAt().getTime()));
 		statement.setString(6, Integer.toString(s.getRetweetCount()));
+		
+
 		
 		statement.execute();
 		statement.close();		
@@ -49,6 +67,7 @@ public class DBConnection {
 		ArrayList<Tweet> result = new ArrayList<Tweet>();
 		
 		Statement statement = _conn.createStatement();
+		//ResultSet results = statement.executeQuery("SELECT * FROM TWEETS;");
 		ResultSet results = statement.executeQuery("SELECT * FROM TWEETS WHERE message LIKE '%" +s+"%';");
 		
 		while (results.next()) {
